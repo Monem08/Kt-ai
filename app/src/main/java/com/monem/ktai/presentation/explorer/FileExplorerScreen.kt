@@ -59,7 +59,7 @@ import com.monem.ktai.presentation.common.theme.TextTertiary
 @Composable
 fun FileExplorerScreen(
     workspaceId: String,
-    onNavigateToFileViewer: (String) -> Unit,
+    onNavigateToFileViewer: (fileUri: String, fileName: String, filePath: String) -> Unit,
     onNavigateToChat: () -> Unit,
     onNavigateBack: () -> Unit,
     viewModel: FileExplorerViewModel = hiltViewModel(),
@@ -193,7 +193,7 @@ fun FileExplorerScreen(
                             if (file.isDirectory) {
                                 viewModel.navigateToFolder(file)
                             } else {
-                                onNavigateToFileViewer(file.uri)
+                                onNavigateToFileViewer(file.uri, file.name, file.path)
                             }
                         },
                     )

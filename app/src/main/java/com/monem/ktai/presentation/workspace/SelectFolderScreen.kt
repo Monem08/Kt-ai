@@ -1,6 +1,5 @@
 package com.monem.ktai.presentation.workspace
 
-import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -18,6 +17,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -37,12 +39,20 @@ fun SelectFolderScreen(
     onFolderSelected: () -> Unit,
     viewModel: WorkspaceViewModel = hiltViewModel(),
 ) {
+    val folderSaved by viewModel.folderSaved.collectAsState()
+
+    LaunchedEffect(folderSaved) {
+        if (folderSaved) {
+            viewModel.resetFolderSaved()
+            onFolderSelected()
+        }
+    }
+
     val folderPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree(),
     ) { uri ->
         if (uri != null) {
             viewModel.onFolderSelected(uri)
-            onFolderSelected()
         }
     }
 

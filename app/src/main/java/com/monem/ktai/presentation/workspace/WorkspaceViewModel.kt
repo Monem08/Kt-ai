@@ -48,6 +48,9 @@ class WorkspaceViewModel @Inject constructor(
         }
     }
 
+    private val _folderSaved = MutableStateFlow(false)
+    val folderSaved: StateFlow<Boolean> = _folderSaved.asStateFlow()
+
     fun onFolderSelected(uri: Uri) {
         viewModelScope.launch {
             safHelper.persistPermission(uri)
@@ -61,7 +64,12 @@ class WorkspaceViewModel @Inject constructor(
             )
 
             workspaceRepository.createWorkspace(workspace)
+            _folderSaved.value = true
         }
+    }
+
+    fun resetFolderSaved() {
+        _folderSaved.value = false
     }
 
     fun deleteWorkspace(workspace: Workspace) {

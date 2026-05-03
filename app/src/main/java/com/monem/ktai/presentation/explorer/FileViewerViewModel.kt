@@ -29,6 +29,7 @@ class FileViewerViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val fileUri: String = savedStateHandle["fileUri"] ?: ""
+    private val fileName: String = savedStateHandle["fileName"] ?: ""
     private val filePath: String = savedStateHandle["filePath"] ?: ""
 
     private val _uiState = MutableStateFlow(FileViewerState())
@@ -40,13 +41,12 @@ class FileViewerViewModel @Inject constructor(
 
     private fun loadFileContent() {
         viewModelScope.launch(Dispatchers.IO) {
-            val displayPath = filePath.ifEmpty { fileUri }
-            val fileName = displayPath.substringAfterLast("/")
-            val isSensitive = safHelper.isSensitiveFile(fileName)
+            val displayName = fileName.ifEmpty { filePath.substringAfterLast("/") }
+            val isSensitive = safHelper.isSensitiveFile(displayName)
 
             _uiState.value = FileViewerState(
-                fileName = fileName,
-                filePath = displayPath,
+                fileName = displayName,
+                filePath = filePath,
                 isSensitive = isSensitive,
                 isLoading = true,
             )
