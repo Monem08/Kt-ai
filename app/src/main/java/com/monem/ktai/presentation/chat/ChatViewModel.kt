@@ -41,8 +41,10 @@ class ChatViewModel @Inject constructor(
             content = content,
         )
 
+        val previousMessages = _uiState.value.messages
+
         _uiState.value = _uiState.value.copy(
-            messages = _uiState.value.messages + userMessage,
+            messages = previousMessages + userMessage,
             pendingRequests = _uiState.value.pendingRequests + 1,
             error = null,
         )
@@ -50,7 +52,7 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             val request = AIRequest(
                 prompt = content,
-                conversationHistory = _uiState.value.messages,
+                conversationHistory = previousMessages,
             )
 
             aiProvider.sendMessage(request)

@@ -255,7 +255,8 @@ fun KtAINavHost() {
                 ApplyConfirmationScreen(
                     onConfirm = {
                         navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.DiffPreview.route) { inclusive = true }
+                            popUpTo(Screen.Home.route) { inclusive = true }
+                            launchSingleTop = true
                         }
                     },
                     onCancel = { navController.navigate(Screen.ChangeHistory.route) },
