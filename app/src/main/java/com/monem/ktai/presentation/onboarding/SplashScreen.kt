@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.monem.ktai.presentation.common.theme.Primary
 import com.monem.ktai.presentation.common.theme.Surface
 import com.monem.ktai.presentation.common.theme.TextSecondary
@@ -34,6 +35,7 @@ import kotlinx.coroutines.delay
 fun SplashScreen(
     onNavigateToOnboarding: () -> Unit,
     onNavigateToHome: () -> Unit,
+    viewModel: SplashViewModel = hiltViewModel(),
 ) {
     var visible by remember { mutableStateOf(false) }
     val alpha by animateFloatAsState(
@@ -44,9 +46,13 @@ fun SplashScreen(
 
     LaunchedEffect(Unit) {
         visible = true
-        delay(2000)
-        // TODO: Check auth state — if logged in go to Home, else Onboarding
-        onNavigateToOnboarding()
+        delay(1500)
+        val isLoggedIn = viewModel.checkAuthSession()
+        if (isLoggedIn) {
+            onNavigateToHome()
+        } else {
+            onNavigateToOnboarding()
+        }
     }
 
     Box(

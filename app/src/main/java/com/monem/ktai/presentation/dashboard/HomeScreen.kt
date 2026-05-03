@@ -22,10 +22,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.monem.ktai.presentation.common.components.KtAICard
 import com.monem.ktai.presentation.common.components.PlanBadge
 import com.monem.ktai.presentation.common.components.UsageBar
@@ -43,7 +46,9 @@ fun HomeScreen(
     onNavigateToWorkspace: () -> Unit,
     onNavigateToSubscription: () -> Unit,
     onNavigateToUsage: () -> Unit,
+    viewModel: HomeViewModel = hiltViewModel(),
 ) {
+    val user by viewModel.user.collectAsState()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -54,11 +59,15 @@ fun HomeScreen(
         Spacer(Modifier.height(16.dp))
 
         // Greeting
-        Text("Hello, Developer", style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
+        Text(
+            "Hello, ${user?.displayName ?: "Developer"}",
+            style = MaterialTheme.typography.headlineMedium,
+            color = TextPrimary,
+        )
         Spacer(Modifier.height(4.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Current Plan: ", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-            PlanBadge(plan = "Free")
+            PlanBadge(plan = user?.plan?.name ?: "Free")
         }
 
         Spacer(Modifier.height(24.dp))
