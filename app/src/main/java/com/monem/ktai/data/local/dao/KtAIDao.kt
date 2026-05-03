@@ -42,6 +42,9 @@ interface WorkspaceDao {
 
     @Query("UPDATE workspaces SET lastOpenedAt = :timestamp WHERE id = :workspaceId")
     suspend fun updateLastOpened(workspaceId: String, timestamp: Long)
+
+    @Query("DELETE FROM workspaces")
+    suspend fun clearAll()
 }
 
 @Dao
@@ -54,6 +57,9 @@ interface ChatSessionDao {
 
     @Query("DELETE FROM chat_sessions WHERE id = :sessionId")
     suspend fun delete(sessionId: String)
+
+    @Query("DELETE FROM chat_sessions")
+    suspend fun clearAll()
 }
 
 @Dao
@@ -66,6 +72,9 @@ interface MessageDao {
 
     @Query("DELETE FROM messages WHERE sessionId = :sessionId")
     suspend fun deleteBySession(sessionId: String)
+
+    @Query("DELETE FROM messages")
+    suspend fun clearAll()
 }
 
 @Dao
@@ -84,6 +93,9 @@ interface FileChangeDao {
 
     @Query("UPDATE file_changes SET isRolledBack = 1 WHERE id = :changeId")
     suspend fun markRolledBack(changeId: String)
+
+    @Query("DELETE FROM file_changes")
+    suspend fun clearAll()
 }
 
 @Dao
@@ -99,4 +111,7 @@ interface UsageDao {
 
     @Query("UPDATE usage_records SET messagesUsed = messagesUsed + 1 WHERE userId = :userId")
     suspend fun incrementMessageCount(userId: String)
+
+    @Query("DELETE FROM usage_records")
+    suspend fun clearAll()
 }

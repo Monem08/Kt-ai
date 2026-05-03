@@ -1,7 +1,11 @@
 package com.monem.ktai.data.repository
 
+import com.monem.ktai.data.local.dao.ChatSessionDao
+import com.monem.ktai.data.local.dao.FileChangeDao
+import com.monem.ktai.data.local.dao.MessageDao
 import com.monem.ktai.data.local.dao.UsageDao
 import com.monem.ktai.data.local.dao.UserDao
+import com.monem.ktai.data.local.dao.WorkspaceDao
 import com.monem.ktai.data.local.entity.UsageRecordEntity
 import com.monem.ktai.data.local.entity.UserProfileEntity
 import com.monem.ktai.domain.model.SubscriptionPlan
@@ -17,6 +21,10 @@ import javax.inject.Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val userDao: UserDao,
     private val usageDao: UsageDao,
+    private val workspaceDao: WorkspaceDao,
+    private val chatSessionDao: ChatSessionDao,
+    private val messageDao: MessageDao,
+    private val fileChangeDao: FileChangeDao,
 ) : AuthRepository {
 
     override val currentUser: Flow<UserProfile?> =
@@ -88,6 +96,11 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun logout() {
+        messageDao.clearAll()
+        chatSessionDao.clearAll()
+        fileChangeDao.clearAll()
+        workspaceDao.clearAll()
+        usageDao.clearAll()
         userDao.clearAll()
     }
 
