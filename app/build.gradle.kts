@@ -77,6 +77,7 @@ dependencies {
     implementation(libs.activity.compose)
     implementation(libs.splashscreen)
     implementation(libs.datastore)
+    implementation(libs.documentfile)
 
     // Navigation
     implementation(libs.navigation.compose)

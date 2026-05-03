@@ -19,6 +19,7 @@ coil = "2.5.0"
 datastore = "1.0.0"
 splashscreen = "1.0.1"
 accompanist = "0.34.0"
+documentfile = "1.0.1"
 
 [libraries]
 # Compose BOM
@@ -36,6 +37,7 @@ core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
 splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
 datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
 
 # Navigation
 navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }

@@ -1,5 +1,8 @@
 package com.monem.ktai.presentation.workspace
 
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.monem.ktai.presentation.common.components.KtAIButton
 import com.monem.ktai.presentation.common.components.KtAICard
 import com.monem.ktai.presentation.common.components.KtAITopBar
@@ -31,7 +35,17 @@ import com.monem.ktai.presentation.common.theme.TextSecondary
 fun SelectFolderScreen(
     onNavigateBack: () -> Unit,
     onFolderSelected: () -> Unit,
+    viewModel: WorkspaceViewModel = hiltViewModel(),
 ) {
+    val folderPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree(),
+    ) { uri ->
+        if (uri != null) {
+            viewModel.onFolderSelected(uri)
+            onFolderSelected()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -92,10 +106,7 @@ fun SelectFolderScreen(
 
             KtAIButton(
                 text = "Choose Folder",
-                onClick = {
-                    // TODO: Launch ACTION_OPEN_DOCUMENT_TREE intent
-                    onFolderSelected()
-                },
+                onClick = { folderPickerLauncher.launch(null) },
             )
         }
     }
