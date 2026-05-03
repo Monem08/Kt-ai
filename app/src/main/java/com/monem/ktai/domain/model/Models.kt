@@ -105,6 +105,7 @@ data class FileNode(
     val children: List<FileNode> = emptyList(),
     val extension: String = name.substringAfterLast('.', ""),
     val size: Long = 0,
+    val uri: String = "",
 )
 
 data class DiffLine(

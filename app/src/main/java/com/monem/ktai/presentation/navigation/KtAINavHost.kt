@@ -210,8 +210,8 @@ fun KtAINavHost() {
                 val workspaceId = backStackEntry.arguments?.getString("workspaceId") ?: return@composable
                 FileExplorerScreen(
                     workspaceId = workspaceId,
-                    onNavigateToFileViewer = { filePath ->
-                        navController.navigate(Screen.FileViewer.createRoute(filePath))
+                    onNavigateToFileViewer = { fileUri, fileName, filePath ->
+                        navController.navigate(Screen.FileViewer.createRoute(fileUri, fileName, filePath))
                     },
                     onNavigateToChat = { navController.navigate(Screen.Chat.createRoute()) },
                     onNavigateBack = { navController.popBackStack() },
@@ -220,11 +220,15 @@ fun KtAINavHost() {
 
             composable(
                 route = Screen.FileViewer.route,
-                arguments = listOf(navArgument("filePath") { type = NavType.StringType }),
+                arguments = listOf(
+                    navArgument("fileUri") { type = NavType.StringType },
+                    navArgument("fileName") { type = NavType.StringType },
+                    navArgument("filePath") { type = NavType.StringType },
+                ),
             ) { backStackEntry ->
-                val filePath = backStackEntry.arguments?.getString("filePath") ?: return@composable
+                val fileUri = backStackEntry.arguments?.getString("fileUri") ?: return@composable
                 FileViewerScreen(
-                    filePath = filePath,
+                    fileUri = fileUri,
                     onNavigateBack = { navController.popBackStack() },
                 )
             }

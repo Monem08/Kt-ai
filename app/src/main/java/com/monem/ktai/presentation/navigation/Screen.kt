@@ -15,8 +15,9 @@ sealed class Screen(val route: String) {
     data object FileExplorer : Screen("file_explorer/{workspaceId}") {
         fun createRoute(workspaceId: String) = "file_explorer/$workspaceId"
     }
-    data object FileViewer : Screen("file_viewer/{filePath}") {
-        fun createRoute(filePath: String) = "file_viewer/${android.net.Uri.encode(filePath)}"
+    data object FileViewer : Screen("file_viewer/{fileUri}/{fileName}/{filePath}") {
+        fun createRoute(fileUri: String, fileName: String, filePath: String) =
+            "file_viewer/${android.net.Uri.encode(fileUri)}/${android.net.Uri.encode(fileName)}/${android.net.Uri.encode(filePath)}"
     }
     data object Chat : Screen("chat/{sessionId}") {
         fun createRoute(sessionId: String = "new") = "chat/$sessionId"
