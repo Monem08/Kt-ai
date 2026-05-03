@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.monem.ktai.data.remote.ai.AIProvider
 import com.monem.ktai.data.remote.ai.AIRequest
-import com.monem.ktai.data.remote.ai.AIResponse
 import com.monem.ktai.domain.model.ChatMessage
 import com.monem.ktai.domain.model.FileEdit
 import com.monem.ktai.domain.model.MessageRole
@@ -18,10 +17,12 @@ import javax.inject.Inject
 
 data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
-    val isLoading: Boolean = false,
+    val pendingRequests: Int = 0,
     val pendingFileEdits: List<FileEdit> = emptyList(),
     val error: String? = null,
-)
+) {
+    val isLoading: Boolean get() = pendingRequests > 0
+}
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
@@ -42,7 +43,7 @@ class ChatViewModel @Inject constructor(
 
         _uiState.value = _uiState.value.copy(
             messages = _uiState.value.messages + userMessage,
-            isLoading = true,
+            pendingRequests = _uiState.value.pendingRequests + 1,
             error = null,
         )
 
@@ -62,13 +63,13 @@ class ChatViewModel @Inject constructor(
                     )
                     _uiState.value = _uiState.value.copy(
                         messages = _uiState.value.messages + assistantMessage,
-                        isLoading = false,
+                        pendingRequests = _uiState.value.pendingRequests - 1,
                         pendingFileEdits = response.fileEdits,
                     )
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false,
+                        pendingRequests = _uiState.value.pendingRequests - 1,
                         error = error.message ?: "Failed to get response",
                     )
                 }

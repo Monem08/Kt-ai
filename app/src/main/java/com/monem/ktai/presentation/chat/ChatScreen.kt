@@ -125,6 +125,17 @@ fun ChatScreen(
                     }
                 }
             }
+
+            if (uiState.error != null) {
+                item {
+                    Text(
+                        text = uiState.error!!,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = com.monem.ktai.presentation.common.theme.AccentRed,
+                        modifier = Modifier.padding(8.dp),
+                    )
+                }
+            }
         }
 
         // Input bar
