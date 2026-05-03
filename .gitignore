@@ -1,5 +1,21 @@
-# Ignore Gradle project-specific cache directory
-.gradle
+# Gradle
+.gradle/
+build/
+local.properties
 
-# Ignore Gradle build output directory
-build
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Android
+app/release/
+app/debug/
+*.apk
+*.aab
+*.jks
+*.keystore
+google-services.json
+
+# Kotlin
+*.class
