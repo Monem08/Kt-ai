@@ -1,0 +1,81 @@
+package com.monem.ktai.presentation.chat
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.monem.ktai.data.remote.ai.AIProvider
+import com.monem.ktai.data.remote.ai.AIRequest
+import com.monem.ktai.data.remote.ai.AIResponse
+import com.monem.ktai.domain.model.ChatMessage
+import com.monem.ktai.domain.model.FileEdit
+import com.monem.ktai.domain.model.MessageRole
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.util.UUID
+import javax.inject.Inject
+
+data class ChatUiState(
+    val messages: List<ChatMessage> = emptyList(),
+    val isLoading: Boolean = false,
+    val pendingFileEdits: List<FileEdit> = emptyList(),
+    val error: String? = null,
+)
+
+@HiltViewModel
+class ChatViewModel @Inject constructor(
+    private val aiProvider: AIProvider,
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(ChatUiState())
+    val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
+
+    fun sendMessage(content: String) {
+        if (content.isBlank()) return
+
+        val userMessage = ChatMessage(
+            id = UUID.randomUUID().toString(),
+            role = MessageRole.USER,
+            content = content,
+        )
+
+        _uiState.value = _uiState.value.copy(
+            messages = _uiState.value.messages + userMessage,
+            isLoading = true,
+            error = null,
+        )
+
+        viewModelScope.launch {
+            val request = AIRequest(
+                prompt = content,
+                conversationHistory = _uiState.value.messages,
+            )
+
+            aiProvider.sendMessage(request)
+                .onSuccess { response ->
+                    val assistantMessage = ChatMessage(
+                        id = UUID.randomUUID().toString(),
+                        role = MessageRole.ASSISTANT,
+                        content = response.message,
+                        fileEdits = response.fileEdits.ifEmpty { null },
+                    )
+                    _uiState.value = _uiState.value.copy(
+                        messages = _uiState.value.messages + assistantMessage,
+                        isLoading = false,
+                        pendingFileEdits = response.fileEdits,
+                    )
+                }
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = error.message ?: "Failed to get response",
+                    )
+                }
+        }
+    }
+
+    fun clearPendingEdits() {
+        _uiState.value = _uiState.value.copy(pendingFileEdits = emptyList())
+    }
+}
