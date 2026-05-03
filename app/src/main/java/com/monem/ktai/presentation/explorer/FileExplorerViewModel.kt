@@ -96,6 +96,22 @@ class FileExplorerViewModel @Inject constructor(
         }
     }
 
+    fun navigateToRoot() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+
+            val folderUri = Uri.parse(_uiState.value.folderUri)
+            val files = safHelper.getChildrenOf(folderUri, "")
+
+            _uiState.value = _uiState.value.copy(
+                files = files,
+                currentPath = "",
+                pathSegments = emptyList(),
+                isLoading = false,
+            )
+        }
+    }
+
     fun navigateUp(): Boolean {
         val currentPath = _uiState.value.currentPath
         if (currentPath.isEmpty()) return false

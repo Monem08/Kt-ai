@@ -108,8 +108,7 @@ fun FileExplorerScreen(
                     style = MaterialTheme.typography.labelSmall,
                     color = Primary,
                     modifier = Modifier.clickable {
-                        viewModel.navigateToBreadcrumb(-1)
-                        viewModel.navigateUp() // Go to root
+                        viewModel.navigateToRoot()
                     },
                 )
                 uiState.pathSegments.forEachIndexed { index, segment ->

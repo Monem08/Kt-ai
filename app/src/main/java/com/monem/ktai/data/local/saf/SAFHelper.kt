@@ -158,7 +158,7 @@ class SAFHelper @Inject constructor(
             contentResolver.openOutputStream(fileUri, "wt")?.use { outputStream ->
                 outputStream.write(content.toByteArray())
                 outputStream.flush()
-            }
+            } ?: return Result.failure(Exception("Could not open file for writing"))
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
