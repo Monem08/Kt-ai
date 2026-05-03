@@ -149,6 +149,7 @@ class AuthRepositoryImpl @Inject constructor(
                     ?: user.email?.substringBefore("@") ?: "",
                 plan = SubscriptionPlan.FREE,
             )
+            saveUserLocally(profile)
             _currentUser.value = profile
             profile
         } catch (_: Exception) {
