@@ -224,7 +224,7 @@ fun KtAINavHost() {
             ) { backStackEntry ->
                 val filePath = backStackEntry.arguments?.getString("filePath") ?: return@composable
                 FileViewerScreen(
-                    filePath = java.net.URLDecoder.decode(filePath, "UTF-8"),
+                    filePath = filePath,
                     onNavigateBack = { navController.popBackStack() },
                 )
             }
@@ -258,7 +258,7 @@ fun KtAINavHost() {
                             popUpTo(Screen.DiffPreview.route) { inclusive = true }
                         }
                     },
-                    onCancel = { navController.popBackStack() },
+                    onCancel = { navController.navigate(Screen.ChangeHistory.route) },
                 )
             }
 
