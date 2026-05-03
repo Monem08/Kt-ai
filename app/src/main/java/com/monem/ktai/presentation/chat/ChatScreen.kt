@@ -23,7 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.DifferenceOutlined
+import androidx.compose.material.icons.filled.Compare
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -231,7 +231,7 @@ private fun ChatBubble(message: ChatMessage) {
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                 ) {
                     Icon(
-                        Icons.Default.DifferenceOutlined,
+                        Icons.Default.Compare,
                         contentDescription = null,
                         tint = Primary,
                         modifier = Modifier.size(14.dp),
