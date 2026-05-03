@@ -45,9 +45,9 @@ private val sampleDiff = listOf(
     DiffLine(1, "package com.monem.ktai", DiffLineType.UNCHANGED),
     DiffLine(2, "", DiffLineType.UNCHANGED),
     DiffLine(3, "import android.app.Application", DiffLineType.UNCHANGED),
-    DiffLine(null, "- class OldApplication : Application()", DiffLineType.REMOVED),
-    DiffLine(null, "+ @HiltAndroidApp", DiffLineType.ADDED),
-    DiffLine(null, "+ class KtAIApplication : Application()", DiffLineType.ADDED),
+    DiffLine(null, "class OldApplication : Application()", DiffLineType.REMOVED),
+    DiffLine(null, "@HiltAndroidApp", DiffLineType.ADDED),
+    DiffLine(null, "class KtAIApplication : Application()", DiffLineType.ADDED),
 )
 
 @Composable

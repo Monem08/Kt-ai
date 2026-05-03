@@ -10,14 +10,20 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class BottomNavItem(
     val route: String,
+    val navigationRoute: String = route,
     val icon: ImageVector,
     val label: String,
 ) {
-    data object Home : BottomNavItem(Screen.Home.route, Icons.Default.Home, "Home")
-    data object Chat : BottomNavItem(Screen.Chat.createRoute(), Icons.Default.Chat, "Chat")
-    data object Files : BottomNavItem(Screen.WorkspaceList.route, Icons.Default.Folder, "Files")
-    data object History : BottomNavItem(Screen.ChangeHistory.route, Icons.Default.History, "History")
-    data object Profile : BottomNavItem(Screen.Profile.route, Icons.Default.Person, "Profile")
+    data object Home : BottomNavItem(route = Screen.Home.route, icon = Icons.Default.Home, label = "Home")
+    data object Chat : BottomNavItem(
+        route = Screen.Chat.route,
+        navigationRoute = Screen.Chat.createRoute(),
+        icon = Icons.Default.Chat,
+        label = "Chat",
+    )
+    data object Files : BottomNavItem(route = Screen.WorkspaceList.route, icon = Icons.Default.Folder, label = "Files")
+    data object History : BottomNavItem(route = Screen.ChangeHistory.route, icon = Icons.Default.History, label = "History")
+    data object Profile : BottomNavItem(route = Screen.Profile.route, icon = Icons.Default.Person, label = "Profile")
 }
 
 val bottomNavItems = listOf(

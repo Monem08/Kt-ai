@@ -240,7 +240,7 @@ fun UsageBar(
                 .fillMaxWidth()
                 .height(6.dp)
                 .clip(RoundedCornerShape(3.dp)),
-            color = if (used.toFloat() / total > 0.9f) Color(0xFFFF5252) else Primary,
+            color = if (total > 0 && used.toFloat() / total > 0.9f) Color(0xFFFF5252) else Primary,
             trackColor = SurfaceContainerHigh,
         )
     }

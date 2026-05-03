@@ -72,7 +72,7 @@ fun KtAINavHost() {
                                 indicatorColor = Primary.copy(alpha = 0.12f),
                             ),
                             onClick = {
-                                navController.navigate(item.route) {
+                                navController.navigate(item.navigationRoute) {
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         saveState = true
                                     }
