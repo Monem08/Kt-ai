@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -52,7 +53,7 @@ class WorkspaceViewModel @Inject constructor(
     val folderSaved: StateFlow<Boolean> = _folderSaved.asStateFlow()
 
     fun onFolderSelected(uri: Uri) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             safHelper.persistPermission(uri)
 
             val folderName = safHelper.getFolderName(uri)
@@ -73,7 +74,7 @@ class WorkspaceViewModel @Inject constructor(
     }
 
     fun deleteWorkspace(workspace: Workspace) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val uri = Uri.parse(workspace.folderUri)
             safHelper.releasePermission(uri)
             workspaceRepository.deleteWorkspace(workspace.id)

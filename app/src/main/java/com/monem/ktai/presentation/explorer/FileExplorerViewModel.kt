@@ -116,17 +116,19 @@ class FileExplorerViewModel @Inject constructor(
         val currentPath = _uiState.value.currentPath
         if (currentPath.isEmpty()) return false
 
-        viewModelScope.launch(Dispatchers.IO) {
-            _uiState.value = _uiState.value.copy(isLoading = true)
+        val parentPath = currentPath.substringBeforeLast("/", "")
+        _uiState.value = _uiState.value.copy(
+            isLoading = true,
+            currentPath = parentPath,
+            pathSegments = if (parentPath.isEmpty()) emptyList() else parentPath.split("/"),
+        )
 
-            val parentPath = currentPath.substringBeforeLast("/", "")
+        viewModelScope.launch(Dispatchers.IO) {
             val folderUri = Uri.parse(_uiState.value.folderUri)
             val files = safHelper.getChildrenOf(folderUri, parentPath)
 
             _uiState.value = _uiState.value.copy(
                 files = files,
-                currentPath = parentPath,
-                pathSegments = if (parentPath.isEmpty()) emptyList() else parentPath.split("/"),
                 isLoading = false,
             )
         }
