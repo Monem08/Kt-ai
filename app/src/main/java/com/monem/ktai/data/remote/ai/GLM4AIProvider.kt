@@ -31,7 +31,7 @@ class GLM4AIProvider(
                 messages = messages,
                 temperature = 0.6,
                 topP = 0.95,
-                maxTokens = 4096,
+                maxTokens = 8192,
                 stream = false,
             )
 
@@ -42,7 +42,11 @@ class GLM4AIProvider(
             }
 
             val chatResponse: ChatCompletionResponse = response.body()
-            val content = chatResponse.choices.firstOrNull()?.message?.content
+            val choice = chatResponse.choices.firstOrNull()
+                ?: return Result.failure(Exception("Empty response from AI"))
+
+            val content = choice.message.content
+                ?: choice.message.reasoningContent
                 ?: return Result.failure(Exception("Empty response from AI"))
 
             Result.success(AIResponse(message = content))
@@ -54,7 +58,7 @@ class GLM4AIProvider(
                 e.message?.contains("429") == true || e.message?.contains("Too Many") == true ->
                     "Rate limit exceeded. Please wait a moment and try again."
                 e.message?.contains("timeout") == true || e.message?.contains("Timeout") == true ->
-                    "Request timed out. Please check your internet connection."
+                    "Request timed out. Please check your internet connection and try again."
                 e.message?.contains("Unable to resolve host") == true ||
                     e.message?.contains("No address associated") == true ->
                     "No internet connection. Please check your network."
@@ -68,10 +72,10 @@ class GLM4AIProvider(
         return apiKey.isNotBlank()
     }
 
-    private fun buildMessages(request: AIRequest): List<ChatMessageDto> {
-        val messages = mutableListOf<ChatMessageDto>()
+    private fun buildMessages(request: AIRequest): List<RequestMessageDto> {
+        val messages = mutableListOf<RequestMessageDto>()
 
-        messages.add(ChatMessageDto(role = "system", content = request.systemPrompt))
+        messages.add(RequestMessageDto(role = "system", content = request.systemPrompt))
 
         if (request.fileContexts.isNotEmpty()) {
             val contextText = buildString {
@@ -81,7 +85,7 @@ class GLM4AIProvider(
                     appendLine(ctx.content)
                 }
             }
-            messages.add(ChatMessageDto(role = "system", content = contextText))
+            messages.add(RequestMessageDto(role = "system", content = contextText))
         }
 
         request.conversationHistory.forEach { msg ->
@@ -90,10 +94,10 @@ class GLM4AIProvider(
                 MessageRole.ASSISTANT -> "assistant"
                 MessageRole.SYSTEM -> "system"
             }
-            messages.add(ChatMessageDto(role = role, content = msg.content))
+            messages.add(RequestMessageDto(role = role, content = msg.content))
         }
 
-        messages.add(ChatMessageDto(role = "user", content = request.prompt))
+        messages.add(RequestMessageDto(role = "user", content = request.prompt))
 
         return messages
     }
@@ -107,17 +111,23 @@ class GLM4AIProvider(
 @Serializable
 data class ChatCompletionRequest(
     val model: String,
-    val messages: List<ChatMessageDto>,
+    val messages: List<RequestMessageDto>,
     val temperature: Double = 0.6,
     @SerialName("top_p") val topP: Double = 0.95,
-    @SerialName("max_tokens") val maxTokens: Int = 4096,
+    @SerialName("max_tokens") val maxTokens: Int = 8192,
     val stream: Boolean = false,
 )
 
 @Serializable
-data class ChatMessageDto(
+data class RequestMessageDto(
     val role: String,
     val content: String,
+)
+
+@Serializable
+data class ResponseMessageDto(
+    val role: String = "",
+    val content: String? = null,
     @SerialName("reasoning_content") val reasoningContent: String? = null,
 )
 
@@ -131,7 +141,7 @@ data class ChatCompletionResponse(
 @Serializable
 data class ChatChoice(
     val index: Int = 0,
-    val message: ChatMessageDto = ChatMessageDto("", ""),
+    val message: ResponseMessageDto = ResponseMessageDto(),
     @SerialName("finish_reason") val finishReason: String? = null,
 )
 
