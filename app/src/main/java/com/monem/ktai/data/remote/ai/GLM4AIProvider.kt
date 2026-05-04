@@ -1,14 +1,16 @@
 package com.monem.ktai.data.remote.ai
 
+import android.util.Log
 import com.monem.ktai.domain.model.MessageRole
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -25,6 +27,7 @@ class GLM4AIProvider(
 
     override suspend fun sendMessage(request: AIRequest): Result<AIResponse> {
         return try {
+            Log.d(TAG, "Sending message to GLM-4...")
             val messages = buildMessages(request)
 
             val chatRequest = ChatCompletionRequest(
@@ -42,19 +45,26 @@ class GLM4AIProvider(
                 setBody(chatRequest)
             }
 
-            when (response.status) {
-                HttpStatusCode.OK -> { /* success, continue */ }
-                HttpStatusCode.Unauthorized ->
-                    return Result.failure(Exception("Invalid API key. Please check your GLM API key in settings."))
-                HttpStatusCode.TooManyRequests ->
-                    return Result.failure(Exception("Rate limit exceeded. Please wait a moment and try again."))
-                HttpStatusCode.InternalServerError, HttpStatusCode.BadGateway, HttpStatusCode.ServiceUnavailable ->
-                    return Result.failure(Exception("AI server error (${response.status.value}). Please try again later."))
-                else ->
-                    return Result.failure(Exception("AI request failed with status ${response.status.value}"))
+            Log.d(TAG, "Response status: ${response.status.value}")
+
+            if (!response.status.isSuccess()) {
+                val errorBody = try { response.bodyAsText() } catch (_: Exception) { "" }
+                Log.e(TAG, "API error ${response.status.value}: $errorBody")
+                val errorMessage = when (response.status.value) {
+                    401 -> "Invalid API key. Please check your GLM API key in settings."
+                    429 -> "Rate limit exceeded. Please wait a moment and try again."
+                    in 500..599 -> "AI server error (${response.status.value}). Please try again later."
+                    else -> "AI request failed with status ${response.status.value}"
+                }
+                return Result.failure(Exception(errorMessage))
             }
 
-            val chatResponse: ChatCompletionResponse = response.body()
+            val responseText = response.bodyAsText()
+            Log.d(TAG, "Response length: ${responseText.length}")
+
+            val chatResponse = json.decodeFromString<ChatCompletionResponse>(responseText)
+            Log.d(TAG, "Choices count: ${chatResponse.choices.size}")
+
             val choice = chatResponse.choices.firstOrNull()
                 ?: return Result.failure(Exception("Empty response from AI"))
 
@@ -62,12 +72,14 @@ class GLM4AIProvider(
                 ?: choice.message.reasoningContent
                 ?: return Result.failure(Exception("Empty response from AI"))
 
+            Log.d(TAG, "Success! Content length: ${content.length}")
             Result.success(AIResponse(message = content))
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
+            Log.e(TAG, "Exception in sendMessage", e)
             val errorMessage = when {
                 e.message?.contains("timeout") == true || e.message?.contains("Timeout") == true ->
-                    "Request timed out. Please check your internet connection and try again."
+                    "Request timed out. AI response can take up to 60 seconds. Please try again."
                 e.message?.contains("Unable to resolve host") == true ||
                     e.message?.contains("No address associated") == true ->
                     "No internet connection. Please check your network."
@@ -112,6 +124,7 @@ class GLM4AIProvider(
     }
 
     companion object {
+        private const val TAG = "GLM4AI"
         private const val API_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
         private const val MODEL_NAME = "z-ai/glm4.7"
     }
