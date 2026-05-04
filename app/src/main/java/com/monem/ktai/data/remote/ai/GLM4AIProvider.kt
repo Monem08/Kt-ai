@@ -100,7 +100,7 @@ class GLM4AIProvider(
 
     companion object {
         private const val API_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
-        private const val MODEL_NAME = "z-ai/glm4-7"
+        private const val MODEL_NAME = "z-ai/glm4.7"
     }
 }
 
@@ -118,6 +118,7 @@ data class ChatCompletionRequest(
 data class ChatMessageDto(
     val role: String,
     val content: String,
+    @SerialName("reasoning_content") val reasoningContent: String? = null,
 )
 
 @Serializable
