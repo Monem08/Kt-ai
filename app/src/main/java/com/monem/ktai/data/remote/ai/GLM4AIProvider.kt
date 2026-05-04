@@ -7,6 +7,7 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -41,6 +42,18 @@ class GLM4AIProvider(
                 setBody(chatRequest)
             }
 
+            when (response.status) {
+                HttpStatusCode.OK -> { /* success, continue */ }
+                HttpStatusCode.Unauthorized ->
+                    return Result.failure(Exception("Invalid API key. Please check your GLM API key in settings."))
+                HttpStatusCode.TooManyRequests ->
+                    return Result.failure(Exception("Rate limit exceeded. Please wait a moment and try again."))
+                HttpStatusCode.InternalServerError, HttpStatusCode.BadGateway, HttpStatusCode.ServiceUnavailable ->
+                    return Result.failure(Exception("AI server error (${response.status.value}). Please try again later."))
+                else ->
+                    return Result.failure(Exception("AI request failed with status ${response.status.value}"))
+            }
+
             val chatResponse: ChatCompletionResponse = response.body()
             val choice = chatResponse.choices.firstOrNull()
                 ?: return Result.failure(Exception("Empty response from AI"))
@@ -53,10 +66,6 @@ class GLM4AIProvider(
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             val errorMessage = when {
-                e.message?.contains("401") == true || e.message?.contains("Unauthorized") == true ->
-                    "Invalid API key. Please check your GLM API key in settings."
-                e.message?.contains("429") == true || e.message?.contains("Too Many") == true ->
-                    "Rate limit exceeded. Please wait a moment and try again."
                 e.message?.contains("timeout") == true || e.message?.contains("Timeout") == true ->
                     "Request timed out. Please check your internet connection and try again."
                 e.message?.contains("Unable to resolve host") == true ||
