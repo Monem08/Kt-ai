@@ -6,10 +6,8 @@ import io.ktor.client.call.body
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import io.ktor.utils.io.readUTF8Line
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -49,6 +47,7 @@ class GLM4AIProvider(
 
             Result.success(AIResponse(message = content))
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             val errorMessage = when {
                 e.message?.contains("401") == true || e.message?.contains("Unauthorized") == true ->
                     "Invalid API key. Please check your GLM API key in settings."
