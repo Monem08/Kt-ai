@@ -81,13 +81,13 @@ object AIModule {
                 })
             }
             install(HttpTimeout) {
-                requestTimeoutMillis = 120_000
-                connectTimeoutMillis = 30_000
-                socketTimeoutMillis = 120_000
+                requestTimeoutMillis = 600_000
+                connectTimeoutMillis = 60_000
+                socketTimeoutMillis = 300_000
             }
             engine {
-                connectTimeout = 30_000
-                socketTimeout = 120_000
+                connectTimeout = 60_000
+                socketTimeout = 300_000
             }
             install(Logging) {
                 level = LogLevel.NONE

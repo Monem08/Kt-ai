@@ -3,6 +3,7 @@ package com.monem.ktai.data.remote.ai
 import android.util.Log
 import com.monem.ktai.domain.model.MessageRole
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -43,6 +44,10 @@ class GLM4AIProvider(
                 contentType(ContentType.Application.Json)
                 header("Authorization", "Bearer $apiKey")
                 setBody(chatRequest)
+                timeout {
+                    requestTimeoutMillis = 600_000
+                    socketTimeoutMillis = 300_000
+                }
             }
 
             Log.d(TAG, "Response status: ${response.status.value}")
