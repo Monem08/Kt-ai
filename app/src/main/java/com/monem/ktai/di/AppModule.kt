@@ -2,6 +2,7 @@ package com.monem.ktai.di
 
 import android.content.Context
 import androidx.room.Room
+import com.monem.ktai.BuildConfig
 import com.monem.ktai.data.local.KtAIDatabase
 import com.monem.ktai.data.local.dao.ChatSessionDao
 import com.monem.ktai.data.local.dao.FileChangeDao
@@ -10,6 +11,7 @@ import com.monem.ktai.data.local.dao.UsageDao
 import com.monem.ktai.data.local.dao.UserDao
 import com.monem.ktai.data.local.dao.WorkspaceDao
 import com.monem.ktai.data.remote.ai.AIProvider
+import com.monem.ktai.data.remote.ai.GLM4AIProvider
 import com.monem.ktai.data.remote.ai.PlaceholderAIProvider
 import com.monem.ktai.data.repository.AuthRepositoryImpl
 import com.monem.ktai.data.repository.ChatRepositoryImpl
@@ -25,7 +27,20 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.android.Android
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json
+import javax.inject.Qualifier
 import javax.inject.Singleton
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class AIHttpClient
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -55,7 +70,37 @@ object AIModule {
 
     @Provides
     @Singleton
-    fun provideAIProvider(): AIProvider = PlaceholderAIProvider()
+    @AIHttpClient
+    fun provideAIHttpClient(): HttpClient {
+        return HttpClient(Android) {
+            install(ContentNegotiation) {
+                json(Json {
+                    ignoreUnknownKeys = true
+                    isLenient = true
+                    encodeDefaults = true
+                })
+            }
+            install(HttpTimeout) {
+                requestTimeoutMillis = 60_000
+                connectTimeoutMillis = 15_000
+                socketTimeoutMillis = 60_000
+            }
+            install(Logging) {
+                level = LogLevel.NONE
+            }
+        }
+    }
+
+    @Provides
+    @Singleton
+    fun provideAIProvider(@AIHttpClient httpClient: HttpClient): AIProvider {
+        val apiKey = BuildConfig.GLM_API_KEY
+        return if (apiKey.isNotBlank()) {
+            GLM4AIProvider(apiKey, httpClient)
+        } else {
+            PlaceholderAIProvider()
+        }
+    }
 }
 
 @Module
