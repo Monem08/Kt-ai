@@ -87,6 +87,7 @@ class ChatViewModel @Inject constructor(
                         )
                     }
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Log.e("ChatVM", "Uncaught exception in sendMessage", e)
                 _uiState.value = _uiState.value.copy(
                     pendingRequests = _uiState.value.pendingRequests - 1,
