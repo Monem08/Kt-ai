@@ -15,6 +15,7 @@ data class AuthUiState(
     val error: String? = null,
     val isSuccess: Boolean = false,
     val resetEmailSent: Boolean = false,
+    val confirmationRequired: Boolean = false,
 )
 
 @HiltViewModel
@@ -56,7 +57,13 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             authRepository.signup(email, password, displayName)
-                .onSuccess { _uiState.value = AuthUiState(isSuccess = true) }
+                .onSuccess { user ->
+                    if (user.id.isEmpty()) {
+                        _uiState.value = AuthUiState(confirmationRequired = true)
+                    } else {
+                        _uiState.value = AuthUiState(isSuccess = true)
+                    }
+                }
                 .onFailure { _uiState.value = AuthUiState(error = it.message ?: "Signup failed") }
         }
     }

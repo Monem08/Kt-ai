@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.monem.ktai.presentation.common.components.KtAIButton
 import com.monem.ktai.presentation.common.components.KtAITextField
+import com.monem.ktai.presentation.common.theme.AccentGreen
 import com.monem.ktai.presentation.common.theme.AccentRed
 import com.monem.ktai.presentation.common.theme.Primary
 import com.monem.ktai.presentation.common.theme.Surface
@@ -54,6 +55,36 @@ fun SignupScreen(
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) onNavigateToHome()
+    }
+
+    if (uiState.confirmationRequired) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Surface)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Default.Code,
+                contentDescription = null,
+                tint = AccentGreen,
+                modifier = Modifier.size(56.dp),
+            )
+            Spacer(Modifier.height(16.dp))
+            Text("Check Your Email", style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "We sent a confirmation link to $email. Please verify your email then sign in.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+            Spacer(Modifier.height(24.dp))
+            KtAIButton(text = "Go to Sign In", onClick = onNavigateToLogin)
+        }
+        return
     }
 
     Column(

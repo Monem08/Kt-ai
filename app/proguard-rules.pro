@@ -22,6 +22,10 @@
 # Keep Room entities
 -keep class com.monem.ktai.data.local.entity.** { *; }
 
+# Keep Supabase/GoTrue
+-keep class io.github.jan.supabase.** { *; }
+-keep class io.ktor.** { *; }
+
 # Keep Hilt
 -keep class dagger.hilt.** { *; }
 -keep class javax.inject.** { *; }
