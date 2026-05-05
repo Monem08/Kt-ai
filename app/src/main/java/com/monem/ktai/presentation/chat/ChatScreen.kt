@@ -112,9 +112,9 @@ fun ChatScreen(
     var inputText by rememberSaveable { mutableStateOf("") }
     val listState = rememberLazyListState()
 
-    LaunchedEffect(uiState.messages.size) {
+    LaunchedEffect(uiState.messages.size, uiState.isLoading) {
         if (uiState.messages.isNotEmpty()) {
-            listState.animateScrollToItem(uiState.messages.size - 1)
+            listState.animateScrollToItem(0)
         }
     }
 
@@ -135,40 +135,41 @@ fun ChatScreen(
 
         LazyColumn(
             state = listState,
+            reverseLayout = true,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.Bottom),
         ) {
             if (uiState.messages.isEmpty() && !uiState.isLoading) {
                 item {
                     WelcomeSection(onQuickAction = { prompt -> viewModel.sendMessage(prompt); inputText = "" })
                 }
-            }
+            } else {
+                if (uiState.error != null) {
+                    item {
+                        ErrorBanner(error = uiState.error!!)
+                    }
+                }
 
-            items(uiState.messages, key = { it.id }) { message ->
-                ChatBubble(
-                    message = message,
-                    isLastAssistant = message.role == MessageRole.ASSISTANT &&
-                        message == uiState.messages.lastOrNull { it.role == MessageRole.ASSISTANT },
-                    onRegenerate = { viewModel.regenerateLastMessage() },
-                    isLoading = uiState.isLoading,
-                )
-            }
+                if (uiState.isLoading) {
+                    item { TypingIndicator() }
+                }
 
-            val assistantCount = uiState.messages.count { it.role == MessageRole.ASSISTANT }
-            if (assistantCount >= REVIEW_PROMPT_AFTER_MESSAGES / 2 && !uiState.isLoading) {
-                item { ReviewSection() }
-            }
+                val assistantCount = uiState.messages.count { it.role == MessageRole.ASSISTANT }
+                if (assistantCount >= REVIEW_PROMPT_AFTER_MESSAGES / 2 && !uiState.isLoading) {
+                    item { ReviewSection() }
+                }
 
-            if (uiState.isLoading) {
-                item { TypingIndicator() }
-            }
-
-            if (uiState.error != null) {
-                item {
-                    ErrorBanner(error = uiState.error!!)
+                items(uiState.messages.reversed(), key = { it.id }) { message ->
+                    ChatBubble(
+                        message = message,
+                        isLastAssistant = message.role == MessageRole.ASSISTANT &&
+                            message == uiState.messages.lastOrNull { it.role == MessageRole.ASSISTANT },
+                        onRegenerate = { viewModel.regenerateLastMessage() },
+                        isLoading = uiState.isLoading,
+                    )
                 }
             }
         }
