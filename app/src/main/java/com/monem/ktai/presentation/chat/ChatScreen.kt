@@ -385,7 +385,7 @@ private fun ChatInputBar(
             )
             Spacer(Modifier.width(8.dp))
             SmallFloatingActionButton(
-                onClick = onSend,
+                onClick = { if (inputText.isNotBlank() && !isLoading) onSend() },
                 containerColor = if (inputText.isNotBlank() && !isLoading) Primary else Primary.copy(alpha = 0.4f),
                 shape = CircleShape,
                 modifier = Modifier.size(44.dp),
@@ -489,9 +489,9 @@ private fun QuickActionChip(
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
+            .background(SurfaceContainerHigh)
             .border(1.dp, CardBorder, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .background(SurfaceContainerHigh)
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

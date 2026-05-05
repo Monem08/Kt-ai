@@ -488,10 +488,14 @@ private fun findWordEnd(code: String, start: Int): Int {
 
 private fun findNumberEnd(code: String, start: Int): Int {
     var i = start
-    while (i < code.length && (code[i].isDigit() || code[i] == '.' || code[i] == '_' ||
-                code[i] == 'x' || code[i] == 'X' || code[i] == 'L' || code[i] == 'f' ||
-                (code[i] in 'a'..'f') || (code[i] in 'A'..'F'))
-    ) i++
+    val isHex = i + 1 < code.length && code[i] == '0' && (code[i + 1] == 'x' || code[i + 1] == 'X')
+    if (isHex) {
+        i += 2
+        while (i < code.length && (code[i].isDigit() || code[i] in 'a'..'f' || code[i] in 'A'..'F' || code[i] == '_')) i++
+    } else {
+        while (i < code.length && (code[i].isDigit() || code[i] == '.' || code[i] == '_')) i++
+    }
+    if (i < code.length && (code[i] == 'L' || code[i] == 'f' || code[i] == 'F')) i++
     return i
 }
 
