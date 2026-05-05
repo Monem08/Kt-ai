@@ -19,6 +19,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -133,20 +134,28 @@ fun ChatScreen(
     ) {
         KtAITopBar(title = "AI Chat", onBack = onNavigateBack)
 
-        LazyColumn(
-            state = listState,
-            reverseLayout = true,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.Bottom),
-        ) {
-            if (uiState.messages.isEmpty() && !uiState.isLoading) {
-                item {
-                    WelcomeSection(onQuickAction = { prompt -> viewModel.sendMessage(prompt); inputText = "" })
-                }
-            } else {
+        if (uiState.messages.isEmpty() && !uiState.isLoading) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                WelcomeSection(onQuickAction = { prompt -> viewModel.sendMessage(prompt); inputText = "" })
+            }
+        } else {
+            LazyColumn(
+                state = listState,
+                reverseLayout = true,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.Bottom),
+            ) {
                 if (uiState.error != null) {
                     item {
                         ErrorBanner(error = uiState.error!!)
