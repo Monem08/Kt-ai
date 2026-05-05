@@ -97,6 +97,59 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    fun regenerateLastMessage() {
+        val messages = _uiState.value.messages
+        val lastUserIndex = messages.indexOfLast { it.role == MessageRole.USER }
+        if (lastUserIndex == -1) return
+
+        val lastUserMessage = messages[lastUserIndex]
+        val messagesUpToUser = messages.subList(0, lastUserIndex)
+
+        _uiState.value = _uiState.value.copy(
+            messages = messagesUpToUser + lastUserMessage,
+            pendingRequests = _uiState.value.pendingRequests + 1,
+            error = null,
+        )
+
+        viewModelScope.launch {
+            try {
+                val request = AIRequest(
+                    prompt = lastUserMessage.content,
+                    conversationHistory = messagesUpToUser,
+                )
+                val result = withContext(Dispatchers.IO) {
+                    aiProvider.sendMessage(request)
+                }
+                result
+                    .onSuccess { response ->
+                        val assistantMessage = ChatMessage(
+                            id = UUID.randomUUID().toString(),
+                            role = MessageRole.ASSISTANT,
+                            content = response.message,
+                            fileEdits = response.fileEdits.ifEmpty { null },
+                        )
+                        _uiState.value = _uiState.value.copy(
+                            messages = _uiState.value.messages + assistantMessage,
+                            pendingRequests = _uiState.value.pendingRequests - 1,
+                            pendingFileEdits = response.fileEdits,
+                        )
+                    }
+                    .onFailure { error ->
+                        _uiState.value = _uiState.value.copy(
+                            pendingRequests = _uiState.value.pendingRequests - 1,
+                            error = error.message ?: "Failed to regenerate response",
+                        )
+                    }
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                _uiState.value = _uiState.value.copy(
+                    pendingRequests = _uiState.value.pendingRequests - 1,
+                    error = "Unexpected error: ${e.message}",
+                )
+            }
+        }
+    }
+
     fun clearPendingEdits() {
         _uiState.value = _uiState.value.copy(pendingFileEdits = emptyList())
     }

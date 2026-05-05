@@ -1,5 +1,11 @@
 package com.monem.ktai.presentation.chat
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -43,11 +49,19 @@ import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Compare
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ThumbDown
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
@@ -58,6 +72,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -65,7 +80,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -126,17 +143,23 @@ fun ChatScreen(
         ) {
             if (uiState.messages.isEmpty() && !uiState.isLoading) {
                 item {
-                    Box(
-                        modifier = Modifier.fillParentMaxHeight(0.85f),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        WelcomeSection(onQuickAction = { prompt -> viewModel.sendMessage(prompt); inputText = "" })
-                    }
+                    WelcomeSection(onQuickAction = { prompt -> viewModel.sendMessage(prompt); inputText = "" })
                 }
             }
 
             items(uiState.messages, key = { it.id }) { message ->
-                ChatBubble(message = message)
+                ChatBubble(
+                    message = message,
+                    isLastAssistant = message.role == MessageRole.ASSISTANT &&
+                        message == uiState.messages.lastOrNull { it.role == MessageRole.ASSISTANT },
+                    onRegenerate = { viewModel.regenerateLastMessage() },
+                    isLoading = uiState.isLoading,
+                )
+            }
+
+            val assistantCount = uiState.messages.count { it.role == MessageRole.ASSISTANT }
+            if (assistantCount >= REVIEW_PROMPT_AFTER_MESSAGES / 2 && !uiState.isLoading) {
+                item { ReviewSection() }
             }
 
             if (uiState.isLoading) {
@@ -162,14 +185,21 @@ fun ChatScreen(
     }
 }
 
+private const val REVIEW_PROMPT_AFTER_MESSAGES = 4
+
 @Composable
-private fun ChatBubble(message: ChatMessage) {
+private fun ChatBubble(
+    message: ChatMessage,
+    isLastAssistant: Boolean = false,
+    onRegenerate: () -> Unit = {},
+    isLoading: Boolean = false,
+) {
     val isUser = message.role == MessageRole.USER
 
     if (isUser) {
         UserBubble(message)
     } else {
-        AssistantBubble(message)
+        AssistantBubble(message, isLastAssistant, onRegenerate, isLoading)
     }
 }
 
@@ -206,7 +236,15 @@ private fun UserBubble(message: ChatMessage) {
 }
 
 @Composable
-private fun AssistantBubble(message: ChatMessage) {
+private fun AssistantBubble(
+    message: ChatMessage,
+    isLastAssistant: Boolean = false,
+    onRegenerate: () -> Unit = {},
+    isLoading: Boolean = false,
+) {
+    val context = LocalContext.current
+    var liked by remember { mutableStateOf<Boolean?>(null) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -269,6 +307,64 @@ private fun AssistantBubble(message: ChatMessage) {
                     color = Primary,
                     fontWeight = FontWeight.Medium,
                 )
+            }
+        }
+
+        Spacer(Modifier.height(6.dp))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(
+                onClick = {
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    clipboard.setPrimaryClip(ClipData.newPlainText("ai_response", message.content))
+                    Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show()
+                },
+                modifier = Modifier.size(32.dp),
+            ) {
+                Icon(
+                    Icons.Default.ContentCopy,
+                    contentDescription = "Copy",
+                    tint = TextSecondary,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+            IconButton(
+                onClick = { liked = if (liked == true) null else true },
+                modifier = Modifier.size(32.dp),
+            ) {
+                Icon(
+                    Icons.Default.ThumbUp,
+                    contentDescription = "Like",
+                    tint = if (liked == true) Primary else TextSecondary,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+            IconButton(
+                onClick = { liked = if (liked == false) null else false },
+                modifier = Modifier.size(32.dp),
+            ) {
+                Icon(
+                    Icons.Default.ThumbDown,
+                    contentDescription = "Dislike",
+                    tint = if (liked == false) AccentRed else TextSecondary,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+            if (isLastAssistant) {
+                IconButton(
+                    onClick = { if (!isLoading) onRegenerate() },
+                    enabled = !isLoading,
+                    modifier = Modifier.size(32.dp),
+                ) {
+                    Icon(
+                        Icons.Default.Refresh,
+                        contentDescription = "Regenerate",
+                        tint = if (!isLoading) TextSecondary else TextSecondary.copy(alpha = 0.3f),
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
             }
         }
     }
@@ -418,6 +514,115 @@ private fun ChatInputBar(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ReviewSection() {
+    val context = LocalContext.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        HorizontalDivider(
+            color = CardBorder,
+            thickness = 1.dp,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        )
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 8.dp),
+        ) {
+            Icon(
+                Icons.Default.Star,
+                contentDescription = null,
+                tint = Color(0xFFFFD700),
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                "Enjoying Kt AI?",
+                style = MaterialTheme.typography.titleSmall,
+                color = TextPrimary,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+
+        Text(
+            "Your feedback helps us improve!",
+            style = MaterialTheme.typography.bodySmall,
+            color = TextSecondary,
+            textAlign = TextAlign.Center,
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Primary.copy(alpha = 0.1f))
+                    .clickable {
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:kevin.george6266@gmail.com")
+                            putExtra(Intent.EXTRA_SUBJECT, "Kt AI Feedback")
+                        }
+                        context.startActivity(Intent.createChooser(intent, "Send feedback"))
+                    }
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Default.Email,
+                    contentDescription = null,
+                    tint = Primary,
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    "Email",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Primary,
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Accent.copy(alpha = 0.1f))
+                    .clickable {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/8801345757692"))
+                        context.startActivity(intent)
+                    }
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Default.PhoneAndroid,
+                    contentDescription = null,
+                    tint = Accent,
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    "WhatsApp",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Accent,
+                )
+            }
+        }
+
+        HorizontalDivider(
+            color = CardBorder,
+            thickness = 1.dp,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        )
     }
 }
 
