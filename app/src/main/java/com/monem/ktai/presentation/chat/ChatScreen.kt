@@ -39,6 +39,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Compare
@@ -124,7 +125,14 @@ fun ChatScreen(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             if (uiState.messages.isEmpty() && !uiState.isLoading) {
-                item { WelcomeSection(onQuickAction = { prompt -> viewModel.sendMessage(prompt); inputText = "" }) }
+                item {
+                    Box(
+                        modifier = Modifier.fillParentMaxHeight(0.85f),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        WelcomeSection(onQuickAction = { prompt -> viewModel.sendMessage(prompt); inputText = "" })
+                    }
+                }
             }
 
             items(uiState.messages, key = { it.id }) { message ->
@@ -366,8 +374,13 @@ private fun ChatInputBar(
                 value = inputText,
                 onValueChange = onInputChange,
                 placeholder = {
-                    Text("Ask AI to code...", color = TextTertiary, fontSize = 14.sp)
+                    Text(
+                        if (isLoading) "Waiting for response..." else "Ask AI to code...",
+                        color = TextTertiary,
+                        fontSize = 14.sp,
+                    )
                 },
+                enabled = !isLoading,
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(24.dp)),
@@ -375,24 +388,31 @@ private fun ChatInputBar(
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = SurfaceContainerHigh,
                     unfocusedContainerColor = SurfaceContainerHigh,
+                    disabledContainerColor = SurfaceContainerHigh,
                     focusedTextColor = TextPrimary,
                     unfocusedTextColor = TextPrimary,
+                    disabledTextColor = TextSecondary,
                     cursorColor = Primary,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
                 ),
                 shape = RoundedCornerShape(24.dp),
             )
             Spacer(Modifier.width(8.dp))
             SmallFloatingActionButton(
                 onClick = { if (inputText.isNotBlank() && !isLoading) onSend() },
-                containerColor = if (inputText.isNotBlank() && !isLoading) Primary else Primary.copy(alpha = 0.4f),
+                containerColor = when {
+                    isLoading -> AccentRed.copy(alpha = 0.6f)
+                    inputText.isNotBlank() -> Primary
+                    else -> Primary.copy(alpha = 0.4f)
+                },
                 shape = CircleShape,
                 modifier = Modifier.size(44.dp),
             ) {
                 Icon(
-                    Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "Send",
+                    if (isLoading) Icons.Default.Block else Icons.AutoMirrored.Filled.Send,
+                    contentDescription = if (isLoading) "Waiting" else "Send",
                     tint = TextPrimary,
                     modifier = Modifier.size(20.dp),
                 )
