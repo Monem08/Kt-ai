@@ -243,7 +243,7 @@ private fun AssistantBubble(
     isLoading: Boolean = false,
 ) {
     val context = LocalContext.current
-    var liked by remember { mutableStateOf<Boolean?>(null) }
+    var liked by rememberSaveable { mutableStateOf<Boolean?>(null) }
 
     Column(
         modifier = Modifier
@@ -598,7 +598,9 @@ private fun ReviewSection() {
                     .background(Accent.copy(alpha = 0.1f))
                     .clickable {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/8801345757692"))
-                        context.startActivity(intent)
+                        try { context.startActivity(intent) } catch (_: Exception) {
+                            Toast.makeText(context, "No app can handle this link", Toast.LENGTH_SHORT).show()
+                        }
                     }
                     .padding(horizontal = 14.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
