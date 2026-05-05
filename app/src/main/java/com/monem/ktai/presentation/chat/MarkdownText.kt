@@ -157,8 +157,9 @@ fun formatInlineMarkdown(text: String): AnnotatedString {
                 i + 1 < chars.size && chars[i] == '*' && chars[i + 1] == '*' -> {
                     val end = text.indexOf("**", i + 2)
                     if (end != -1) {
+                        val inner = formatInlineMarkdown(text.substring(i + 2, end))
                         withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append(text.substring(i + 2, end))
+                            append(inner)
                         }
                         i = end + 2
                     } else {
@@ -169,8 +170,9 @@ fun formatInlineMarkdown(text: String): AnnotatedString {
                 chars[i] == '*' && (i == 0 || chars[i - 1] != '*') -> {
                     val end = text.indexOf('*', i + 1)
                     if (end != -1 && (end + 1 >= chars.size || chars[end + 1] != '*')) {
+                        val inner = formatInlineMarkdown(text.substring(i + 1, end))
                         withStyle(SpanStyle(fontStyle = FontStyle.Italic)) {
-                            append(text.substring(i + 1, end))
+                            append(inner)
                         }
                         i = end + 1
                     } else {
